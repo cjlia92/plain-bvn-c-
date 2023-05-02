@@ -1,2 +1,2 @@
 # plain bvn c++
-a simplified game for the homwwork.
+a simplified game for the homework.
