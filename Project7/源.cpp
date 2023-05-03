@@ -3,12 +3,17 @@
 #include <iostream>
 #define key_down(D) ((GetAsyncKeyState('D'))?0:1)
 using namespace std;
+static int  Isjumping = 0;
 IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa, jumpb;
 struct role
 {
     int x = 10;
     int y = 600;
 }role;
+void PrintJump();
+int IsJump();
+int IsGround();
+int IsRun();
 void Initial()
 {
     loadimage(&background, _T("pictures\\background\\0.png"));
@@ -52,6 +57,14 @@ void PrintStill()
 {
     for (int i = 0; i < 4; i++)
     {
+        if (IsRun())
+        {
+            return;
+        }
+        if (IsJump()) 
+        {
+            return;
+        }
         BeginBatchDraw();
         PrintBackground();
         putimage(role.x, role.y, &stillb[i], SRCAND);
@@ -62,11 +75,13 @@ void PrintStill()
 }
 int IsJump()
 {
-    if (GetAsyncKeyState('K'))
+   
+    if (GetAsyncKeyState('K')&&Isjumping<1)
     {
+        Isjumping++;
+        IsGround(); 
         return 1;
     }
-
     return 0;
 }
 int IsJumping()
@@ -79,15 +94,16 @@ int IsJumping()
 }
 int IsGround()
 {
-    if (role.y = 600)
+    if (role.y == 600)
     {
+        Isjumping = 0;
         return 1;
     }
     return 0;
 }
 int IsRun()
 {
-    if (key_down(D))
+    if (GetAsyncKeyState('D'))
     {
         return 1;
     }
@@ -101,7 +117,8 @@ void PrintRun()
 {
     for (int i = 0; i < 8; i++)
     {
-        if(i==0||IsRun())
+        
+        if(IsRun())
         {
             BeginBatchDraw();
             PrintBackground();
@@ -116,44 +133,69 @@ void PrintRun()
             putimage(role.x, role.y, &runb[i], SRCAND);
             putimage(role.x, role.y, &runa[i], SRCPAINT);
             EndBatchDraw();
-            Sleep(100);
+            Sleep(50);
         }
         if (IsJump())
         {
+            PrintJump();
             break;
         }
     }
 }
 
-void PrintJump()
+inline void PrintJump()
 {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 8; i++)
     {
+        role.y -= 18;
+        if (GetAsyncKeyState('D'))
+        {
+            role.x += 15;
+        }
+        if (GetAsyncKeyState('A'))
+        {
+            role.x -= 15;
+        }
         BeginBatchDraw();
         PrintBackground();
-        role.y -= 30;
         putimage(role.x, role.y, 43, 49, &jumpb, 43 * (i % 2), 0, SRCAND);
         putimage(role.x, role.y, 43, 49, &jumpa, 43 * (i % 2), 0, SRCPAINT);
         EndBatchDraw();
-        Sleep(100);       
+        Sleep(25);       
     }
-    for (int i =0; i < 3; i++)
+    if (IsJump())
     {
+        PrintJump();
+    } 
+    for (int i =0; i < 7; i++)
+    {
+        if (IsJump())
+        {
+            PrintJump();
+        }
+        role.y += 18;
+        if (GetAsyncKeyState('D'))
+        {
+            role.x += 15;
+        }
+        if (GetAsyncKeyState('A'))
+        {
+            role.x -= 15;
+        }
         BeginBatchDraw();
         PrintBackground();
-        role.y += 30;
         putimage(role.x, role.y, 43, 49, &jumpb, 43 * 2, 0, SRCAND);
         putimage(role.x, role.y, 43, 49, &jumpa, 43 * 2, 0, SRCPAINT);
         EndBatchDraw();
-        Sleep(100);
+        Sleep(25);
     }
+    role.y += 18;
     BeginBatchDraw();
     PrintBackground();
-    role.y += 30;
     putimage(role.x, role.y, 43, 49, &jumpb, 43 * 3, 0, SRCAND);
     putimage(role.x, role.y, 43, 49, &jumpa, 43 * 3, 0, SRCPAINT);
     EndBatchDraw();
-    Sleep(100);
+    Sleep(25);
 }
 void PrintMove()
 {
@@ -180,7 +222,6 @@ int main()
     while(1)
     {
         PrintBackground();
-        
         PrintMove();
     }
     system("pause");
