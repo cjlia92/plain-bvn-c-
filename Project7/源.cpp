@@ -1,13 +1,18 @@
 #include<graphics.h>
 #include<conio.h>
 #include <iostream>
+#define RIGHT 1
+#define LEFT 0
 using namespace std;
 struct role
 {
-    int x = 10;
-    int y = 600;
-    int height = -43;
-    int width = 38;
+    int x;
+    int y;
+    int height;
+    int width;
+    int Isjumping;//Jugde how many times the role has jumped.
+    int Isattacking;//Jugde how many times the role has attacked.
+    bool face;
 };
 struct Attackwind
 {
@@ -18,44 +23,61 @@ struct Attackwind
 };
 class Role {
 public:
-    role player;
-    Role(int a, int b, int c, int d)
+    role player1;
+    role player2;
+    Role(int a, int b, int c, int d, int e, int f, int g, int h)
     {
-        player.x = a;
-        player.y = b;
-        player.height = c;
-        player.width = d;
+        player1.x = a;
+        player1.y = b;
+        player1.height = c;
+        player1.width = d;
+        player1.face = RIGHT;
+        player2.x = e;
+        player2.y = f;
+        player2.height = g;
+        player2.width = h;
+        player2.face = LEFT;
     }
-    int Isjumping = 0;//Jugde how many times the role has jumped.
-    int Isattacking = 0;//Jugde how many times the role has attacked.
     void Initial();
     void PrintBackground();
-    void PrintStill();
-    int IsJump();
+    void PrintStill(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
+    int IsJump(role&);
     int IsJumping();
-    int IsGround();
-    int IsRun();
-    void PrintRun();
-    void PrintJump();
+    int IsGround(role&);
+    int IsRunA(role&);
+    int IsRunB(role&);
+    void PrintRun(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
+    void PrintJump(role&, IMAGE*, IMAGE*);
     int IsAttack();
-    void PrintAttack();
+    void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7]);
     void PrintMove();
 };
-IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa, jumpb, attacka[3], attackb[3];
+IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa[4], jumpb[4], attacka[3][7], attackb[3][7];
+IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7];
 void Role::Initial()
 {
+    //background.
     loadimage(&background, _T("pictures\\background\\0.png"));
-
+    //still
     loadimage(&stilla[0], _T("pictures\\still\\a0.png"));
     loadimage(&stilla[1], _T("pictures\\still\\a1.png"));
     loadimage(&stilla[2], _T("pictures\\still\\a2.png"));
     loadimage(&stilla[3], _T("pictures\\still\\a3.png"));
-
     loadimage(&stillb[0], _T("pictures\\still\\b0.png"));
     loadimage(&stillb[1], _T("pictures\\still\\b1.png"));
     loadimage(&stillb[2], _T("pictures\\still\\b2.png"));
     loadimage(&stillb[3], _T("pictures\\still\\b3.png"));
+    //Lstill
+    loadimage(&Lstilla[0], _T("pictures\\Lstill\\a0.png"));
+    loadimage(&Lstilla[1], _T("pictures\\Lstill\\a1.png"));
+    loadimage(&Lstilla[2], _T("pictures\\Lstill\\a2.png"));
+    loadimage(&Lstilla[3], _T("pictures\\Lstill\\a3.png"));
+    loadimage(&Lstillb[0], _T("pictures\\Lstill\\b0.png"));
+    loadimage(&Lstillb[1], _T("pictures\\Lstill\\b1.png"));
+    loadimage(&Lstillb[2], _T("pictures\\Lstill\\b2.png"));
+    loadimage(&Lstillb[3], _T("pictures\\Lstill\\b3.png"));
 
+    //run
     loadimage(&runa[0], _T("pictures\\run\\a0.png"));
     loadimage(&runa[1], _T("pictures\\run\\a1.png"));
     loadimage(&runa[2], _T("pictures\\run\\a2.png"));
@@ -64,7 +86,6 @@ void Role::Initial()
     loadimage(&runa[5], _T("pictures\\run\\a5.png"));
     loadimage(&runa[6], _T("pictures\\run\\a6.png"));
     loadimage(&runa[7], _T("pictures\\run\\a7.png"));
-
     loadimage(&runb[0], _T("pictures\\run\\b0.png"));
     loadimage(&runb[1], _T("pictures\\run\\b1.png"));
     loadimage(&runb[2], _T("pictures\\run\\b2.png"));
@@ -73,167 +94,370 @@ void Role::Initial()
     loadimage(&runb[5], _T("pictures\\run\\b5.png"));
     loadimage(&runb[6], _T("pictures\\run\\b6.png"));
     loadimage(&runb[7], _T("pictures\\run\\b7.png"));
+    //Lrun
+    loadimage(&Lruna[0], _T("pictures\\Lrun\\a0.png"));
+    loadimage(&Lruna[1], _T("pictures\\Lrun\\a1.png"));
+    loadimage(&Lruna[2], _T("pictures\\Lrun\\a2.png"));
+    loadimage(&Lruna[3], _T("pictures\\Lrun\\a3.png"));
+    loadimage(&Lruna[4], _T("pictures\\Lrun\\a4.png"));
+    loadimage(&Lruna[5], _T("pictures\\Lrun\\a5.png"));
+    loadimage(&Lruna[6], _T("pictures\\Lrun\\a6.png"));
+    loadimage(&Lruna[7], _T("pictures\\Lrun\\a7.png"));
+    loadimage(&Lrunb[0], _T("pictures\\Lrun\\b0.png"));
+    loadimage(&Lrunb[1], _T("pictures\\Lrun\\b1.png"));
+    loadimage(&Lrunb[2], _T("pictures\\Lrun\\b2.png"));
+    loadimage(&Lrunb[3], _T("pictures\\Lrun\\b3.png"));
+    loadimage(&Lrunb[4], _T("pictures\\Lrun\\b4.png"));
+    loadimage(&Lrunb[5], _T("pictures\\Lrun\\b5.png"));
+    loadimage(&Lrunb[6], _T("pictures\\Lrun\\b6.png"));
+    loadimage(&Lrunb[7], _T("pictures\\Lrun\\b7.png"));
+    //jump
+    loadimage(&jumpa[0], _T("pictures\\jump\\a0.png"));
+    loadimage(&jumpa[1], _T("pictures\\jump\\a1.png"));
+    loadimage(&jumpa[2], _T("pictures\\jump\\a2.png"));
+    loadimage(&jumpa[3], _T("pictures\\jump\\a3.png"));
+    loadimage(&jumpb[0], _T("pictures\\jump\\b0.png"));
+    loadimage(&jumpb[1], _T("pictures\\jump\\b1.png"));
+    loadimage(&jumpb[2], _T("pictures\\jump\\b2.png"));
+    loadimage(&jumpb[3], _T("pictures\\jump\\b3.png"));
+    //Ljump
+    loadimage(&Ljumpa[0], _T("pictures\\Ljump\\a0.png"));
+    loadimage(&Ljumpa[1], _T("pictures\\Ljump\\a1.png"));
+    loadimage(&Ljumpa[2], _T("pictures\\Ljump\\a2.png"));
+    loadimage(&Ljumpa[3], _T("pictures\\Ljump\\a3.png"));
+    loadimage(&Ljumpb[0], _T("pictures\\Ljump\\b0.png"));
+    loadimage(&Ljumpb[1], _T("pictures\\Ljump\\b1.png"));
+    loadimage(&Ljumpb[2], _T("pictures\\Ljump\\b2.png"));
+    loadimage(&Ljumpb[3], _T("pictures\\Ljump\\b3.png"));
 
-    loadimage(&jumpa, _T("pictures\\jump\\a.png"));
-    loadimage(&jumpb, _T("pictures\\jump\\b.png"));
-
-    loadimage(&attacka[0], _T("pictures\\attack\\a0.png"));
-    loadimage(&attackb[0], _T("pictures\\attack\\b0.png"));
-    loadimage(&attacka[1], _T("pictures\\attack\\a1.png"));
-    loadimage(&attackb[1], _T("pictures\\attack\\b1.png"));
-    loadimage(&attacka[2], _T("pictures\\attack\\a2.png"));
-    loadimage(&attackb[2], _T("pictures\\attack\\b2.png"));
+    //attack
+    loadimage(&attacka[0][0], _T("pictures\\attack\\a00.png"));
+    loadimage(&attacka[0][1], _T("pictures\\attack\\a01.png"));
+    loadimage(&attacka[0][2], _T("pictures\\attack\\a02.png"));
+    loadimage(&attacka[0][3], _T("pictures\\attack\\a03.png"));
+    loadimage(&attacka[1][0], _T("pictures\\attack\\a10.png"));
+    loadimage(&attacka[1][1], _T("pictures\\attack\\a11.png"));
+    loadimage(&attacka[1][2], _T("pictures\\attack\\a12.png"));
+    loadimage(&attacka[1][3], _T("pictures\\attack\\a13.png"));
+    loadimage(&attacka[1][4], _T("pictures\\attack\\a14.png"));
+    loadimage(&attacka[2][0], _T("pictures\\attack\\a20.png"));
+    loadimage(&attacka[2][1], _T("pictures\\attack\\a21.png"));
+    loadimage(&attacka[2][2], _T("pictures\\attack\\a22.png"));
+    loadimage(&attacka[2][3], _T("pictures\\attack\\a23.png"));
+    loadimage(&attacka[2][4], _T("pictures\\attack\\a24.png"));
+    loadimage(&attacka[2][5], _T("pictures\\attack\\a25.png"));
+    loadimage(&attacka[2][6], _T("pictures\\attack\\a26.png"));
+    loadimage(&attackb[0][0], _T("pictures\\attack\\b00.png"));
+    loadimage(&attackb[0][1], _T("pictures\\attack\\b01.png"));
+    loadimage(&attackb[0][2], _T("pictures\\attack\\b02.png"));
+    loadimage(&attackb[0][3], _T("pictures\\attack\\b03.png"));
+    loadimage(&attackb[1][0], _T("pictures\\attack\\b10.png"));
+    loadimage(&attackb[1][1], _T("pictures\\attack\\b11.png"));
+    loadimage(&attackb[1][2], _T("pictures\\attack\\b12.png"));
+    loadimage(&attackb[1][3], _T("pictures\\attack\\b13.png"));
+    loadimage(&attackb[1][4], _T("pictures\\attack\\b14.png"));
+    loadimage(&attackb[2][0], _T("pictures\\attack\\b20.png"));
+    loadimage(&attackb[2][1], _T("pictures\\attack\\b21.png"));
+    loadimage(&attackb[2][2], _T("pictures\\attack\\b22.png"));
+    loadimage(&attackb[2][3], _T("pictures\\attack\\b23.png"));
+    loadimage(&attackb[2][4], _T("pictures\\attack\\b24.png"));
+    loadimage(&attackb[2][5], _T("pictures\\attack\\b25.png"));
+    loadimage(&attackb[2][6], _T("pictures\\attack\\b26.png"));
+    //Lattack
+    loadimage(&Lattacka[0][0], _T("pictures\\Lattack\\a00.png"));
+    loadimage(&Lattacka[0][1], _T("pictures\\Lattack\\a01.png"));
+    loadimage(&Lattacka[0][2], _T("pictures\\Lattack\\a02.png"));
+    loadimage(&Lattacka[0][3], _T("pictures\\Lattack\\a03.png"));
+    loadimage(&Lattacka[1][0], _T("pictures\\Lattack\\a10.png"));
+    loadimage(&Lattacka[1][1], _T("pictures\\Lattack\\a11.png"));
+    loadimage(&Lattacka[1][2], _T("pictures\\Lattack\\a12.png"));
+    loadimage(&Lattacka[1][3], _T("pictures\\Lattack\\a13.png"));
+    loadimage(&Lattacka[1][4], _T("pictures\\Lattack\\a14.png"));
+    loadimage(&Lattacka[2][0], _T("pictures\\Lattack\\a20.png"));
+    loadimage(&Lattacka[2][1], _T("pictures\\Lattack\\a21.png"));
+    loadimage(&Lattacka[2][2], _T("pictures\\Lattack\\a22.png"));
+    loadimage(&Lattacka[2][3], _T("pictures\\Lattack\\a23.png"));
+    loadimage(&Lattacka[2][4], _T("pictures\\Lattack\\a24.png"));
+    loadimage(&Lattacka[2][5], _T("pictures\\Lattack\\a25.png"));
+    loadimage(&Lattacka[2][6], _T("pictures\\Lattack\\a26.png"));
+    loadimage(&Lattackb[0][0], _T("pictures\\Lattack\\b00.png"));
+    loadimage(&Lattackb[0][1], _T("pictures\\Lattack\\b01.png"));
+    loadimage(&Lattackb[0][2], _T("pictures\\Lattack\\b02.png"));
+    loadimage(&Lattackb[0][3], _T("pictures\\Lattack\\b03.png"));
+    loadimage(&Lattackb[1][0], _T("pictures\\Lattack\\b10.png"));
+    loadimage(&Lattackb[1][1], _T("pictures\\Lattack\\b11.png"));
+    loadimage(&Lattackb[1][2], _T("pictures\\Lattack\\b12.png"));
+    loadimage(&Lattackb[1][3], _T("pictures\\Lattack\\b13.png"));
+    loadimage(&Lattackb[1][4], _T("pictures\\Lattack\\b14.png"));
+    loadimage(&Lattackb[2][0], _T("pictures\\Lattack\\b20.png"));
+    loadimage(&Lattackb[2][1], _T("pictures\\Lattack\\b21.png"));
+    loadimage(&Lattackb[2][2], _T("pictures\\Lattack\\b22.png"));
+    loadimage(&Lattackb[2][3], _T("pictures\\Lattack\\b23.png"));
+    loadimage(&Lattackb[2][4], _T("pictures\\Lattack\\b24.png"));
+    loadimage(&Lattackb[2][5], _T("pictures\\Lattack\\b25.png"));
+    loadimage(&Lattackb[2][6], _T("pictures\\Lattack\\b26.png"));
 }
 void Role::PrintBackground()
 {
     putimage(0, 0, &background);
 }
-void Role::PrintStill()
+void Role::PrintStill(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
 {
     for (int i = 0; i < 4; i++)
     {
-        if (IsRun())
-        {
-            return;
-        }
-        if (IsJump())
-        {
-            return;
-        }
         BeginBatchDraw();
         PrintBackground();
-        putimage(player.x, player.y, &stillb[i], SRCAND);
-        putimage(player.x, player.y, &stilla[i], SRCPAINT);
+        if (A.face == RIGHT)
+        {
+            putimage(A.x, A.y, imb + i, SRCAND);
+            putimage(A.x, A.y, ima + i, SRCPAINT);
+        }
+        else
+        {
+            putimage(A.x, A.y, Limb + i, SRCAND);
+            putimage(A.x, A.y, Lima + i, SRCPAINT);
+        }
+        if (B.face == RIGHT)
+        {
+            putimage(B.x, B.y, imb + i, SRCAND);
+            putimage(B.x, B.y, ima + i, SRCPAINT);
+        }
+        else
+        {
+            putimage(B.x, B.y, Limb + i, SRCAND);
+            putimage(B.x, B.y, Lima + i, SRCPAINT);
+        }
         EndBatchDraw();
         Sleep(100);
+        if (IsRunA(A))
+        {
+            return;
+        }
+        if (IsJump(A))
+        {
+            return;
+        }
     }
 }
-int Role::IsJump()
+int Role::IsJump(role& A)
 {
 
-    if (GetAsyncKeyState('K') && Isjumping < 1)
+    if (GetAsyncKeyState('K') && A.Isjumping < 1)
     {
-        Isjumping++;
-        IsGround();
+        A.Isjumping++;
+        IsGround(player1);
         return 1;
     }
     return 0;
 }
 int Role::IsJumping()
 {
-    if (player.y < 600)
+    if (player1.y < 600)
     {
         return 1;
     }
     return 0;
 }
-int Role::IsGround()
+int Role::IsGround(role& A)
 {
-    if (player.y == 600)
+    if (player1.y == 600)
     {
-        Isjumping = 0;
+        A.Isjumping = 0;
         return 1;
     }
     return 0;
 }
-int Role::IsRun()
+int Role::IsRunA(role& A)
 {
     if (GetAsyncKeyState('D'))
     {
+        A.face = RIGHT;
         return 1;
     }
     if (GetAsyncKeyState('A'))
     {
+        A.face = LEFT;
         return 1;
     }
     return 0;
 }
-void Role::PrintRun()
+int Role::IsRunB(role& B)
+{
+    if (GetAsyncKeyState(VK_RIGHT))
+    {
+        B.face = RIGHT;
+        return 1;
+    }
+    if (GetAsyncKeyState(VK_LEFT))
+    {
+        B.face = LEFT;
+        return 1;
+    }
+    return 0;
+}
+void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)//more variables make running process move smooth.
 {
     for (int i = 0; i < 8; i++)
     {
-
-        if (IsRun())
+        BeginBatchDraw();
+        PrintBackground();
+        if (IsRunA(A))
         {
-            BeginBatchDraw();
-            PrintBackground();
             if (GetAsyncKeyState('D'))
             {
-                if (player.x < 1232)
+                if (A.x < 1232)
                 {
-                    player.x += 15;
+                    A.x += 15;
                 }
             }
             if (GetAsyncKeyState('A'))
             {
-                if (player.x > 10)
+                if (A.x > 10)
                 {
-                    player.x -= 15;
+                    A.x -= 15;
                 }
             }
-            putimage(player.x, player.y, &runb[i], SRCAND);
-            putimage(player.x, player.y, &runa[i], SRCPAINT);
-            EndBatchDraw();
-            Sleep(50);
+            if (A.face == RIGHT)
+            {
+                putimage(A.x, A.y, imb + i, SRCAND);
+                putimage(A.x, A.y, ima + i, SRCPAINT);
+            }
+            if (A.face == LEFT)
+            {
+                putimage(A.x, A.y, Limb + i, SRCAND);
+                putimage(A.x, A.y, Lima + i, SRCPAINT);
+            }
         }
-        if (IsJump())
+        else//STILL
         {
-            PrintJump();
+            if (A.face == RIGHT)
+            {
+                putimage(A.x, A.y, stillb + i % 4, SRCAND);
+                putimage(A.x, A.y, stilla + i % 4, SRCPAINT);
+            }
+            else
+            {
+                putimage(A.x, A.y, Lstillb + i % 4, SRCAND);
+                putimage(A.x, A.y, Lstilla + i % 4, SRCPAINT);
+            }
+        }
+        if (IsRunB(B))
+        {
+            if (GetAsyncKeyState(VK_RIGHT))
+            {
+                if (B.x < 1232)
+                {
+                    B.x += 15;
+                }
+            }
+            if (GetAsyncKeyState(VK_LEFT))
+            {
+                if (B.x > 10)
+                {
+                    B.x -= 15;
+                }
+            }
+            if (B.face == RIGHT)
+            {
+                putimage(B.x, B.y, imb + i, SRCAND);
+                putimage(B.x, B.y, ima + i, SRCPAINT);
+            }
+            if (B.face == LEFT)
+            {
+                putimage(B.x, B.y, Limb + i, SRCAND);
+                putimage(B.x, B.y, Lima + i, SRCPAINT);
+            }
+        }
+        Sleep(50);
+        EndBatchDraw();
+        if (IsJump(A))
+        {
+            if (player1.face == RIGHT)
+            {
+                PrintJump(player1, jumpb, jumpa);
+            }
+            else {
+                PrintJump(player1, Ljumpb, Ljumpa);
+            }
+            break;
+        }
+        if (IsAttack())
+        {
+            if (A.face == RIGHT)
+            {
+                PrintAttack(A, &attackb[0], &attacka[0]);
+            }
+            else
+            {
+                PrintAttack(A, &Lattackb[0], &Lattacka[0]);
+            }
             break;
         }
     }
 }
-void Role::PrintJump()
+void Role::PrintJump(role& A, IMAGE* imb, IMAGE* ima)
 {
     for (int i = 0; i < 8; i++)
     {
-        player.y -= 18;
+        A.y -= 18;
         if (GetAsyncKeyState('D'))
         {
-            player.x += 15;
+            if (A.x < 1232)
+            {
+                A.x += 15;
+            }
         }
         if (GetAsyncKeyState('A'))
         {
-            player.x -= 15;
+            if (A.x > 10)
+            {
+                A.x -= 15;
+            }
         }
         BeginBatchDraw();
         PrintBackground();
-        putimage(player.x, player.y, 43, 49, &jumpb, 43 * (i % 2), 0, SRCAND);
-        putimage(player.x, player.y, 43, 49, &jumpa, 43 * (i % 2), 0, SRCPAINT);
+        putimage(A.x, A.y, imb + i % 2, SRCAND);
+        putimage(A.x, A.y, ima + i % 2, SRCPAINT);
         EndBatchDraw();
-        Sleep(25);
+        Sleep(28);
     }
-    if (IsJump())
+    if (IsJump(A))
     {
-        PrintJump();
+        PrintJump(A, imb, ima);
     }
     for (int i = 0; i < 7; i++)
     {
-        if (IsJump())
+        if (IsJump(A))
         {
-            PrintJump();
+            PrintJump(A, imb, ima);
         }
-        player.y += 18;
+        A.y += 18;
         if (GetAsyncKeyState('D'))
         {
-            player.x += 15;
+            if (A.x < 1232)
+            {
+                A.x += 15;
+            }
         }
         if (GetAsyncKeyState('A'))
         {
-            player.x -= 15;
+            if (A.x > 10)
+            {
+                A.x -= 15;
+            }
         }
         BeginBatchDraw();
         PrintBackground();
-        putimage(player.x, player.y, 43, 49, &jumpb, 43 * 2, 0, SRCAND);
-        putimage(player.x, player.y, 43, 49, &jumpa, 43 * 2, 0, SRCPAINT);
+        putimage(A.x, A.y, imb + 2, SRCAND);
+        putimage(A.x, A.y, ima + 2, SRCPAINT);
         EndBatchDraw();
         Sleep(25);
     }
-    player.y += 18;
+    A.y += 18;
     BeginBatchDraw();
     PrintBackground();
-    putimage(player.x, player.y, 43, 49, &jumpb, 43 * 3, 0, SRCAND);
-    putimage(player.x, player.y, 43, 49, &jumpa, 43 * 3, 0, SRCPAINT);
+    putimage(A.x, A.y, imb + 3, SRCAND);
+    putimage(A.x, A.y, ima + 3, SRCPAINT);
     EndBatchDraw();
     Sleep(25);
 }
@@ -245,25 +469,24 @@ int Role::IsAttack()
     }
     return 0;
 }
-void Role::PrintAttack()
+void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
 {
     //the first attack.
     for (int i = 0; i < 4; i++) {
-        player.x += 3;
+        if (A.face == RIGHT)
+        {
+            A.x += 4;
+        }
+        else
+        {
+            A.x -= 4;
+        }
         BeginBatchDraw();
         PrintBackground();
-        if (i == 0 || i == 3)
-        {
-            putimage(player.x, player.y, 34, 48, &attackb[0], 155 * (i % 2), 0, SRCAND);
-            putimage(player.x, player.y, 34, 48, &attacka[0], 155 * (i % 2), 0, SRCPAINT);
-        }
-        if (i == 1 || i == 2)
-        {
-            putimage(player.x, player.y, 50, 48, &attackb[0], 40 + 57 * ((i + 1) % 2), 0, SRCAND);
-            putimage(player.x, player.y, 50, 48, &attacka[0], 40 + 57 * ((i + 1) % 2), 0, SRCPAINT);
-        }
+        putimage(A.x, A.y, *imb + i, SRCAND);
+        putimage(A.x, A.y, *ima + i, SRCPAINT);
         EndBatchDraw();
-        Sleep(150);
+        Sleep(80);
     }
     //the second attack.
     if (IsAttack())
@@ -271,31 +494,20 @@ void Role::PrintAttack()
 
         for (int i = 0; i < 5; i++)
         {
-            player.x += 3;
+            if (A.face == RIGHT)
+            {
+                A.x += 4;
+            }
+            else
+            {
+                A.x -= 4;
+            }
             BeginBatchDraw();
             PrintBackground();
-            if (i == 0 || i == 1)
-            {
-                putimage(player.x, player.y, 48, 47, &attackb[1], 48 * (i % 2), 0, SRCAND);
-                putimage(player.x, player.y, 48, 47, &attacka[1], 48 * (i % 2), 0, SRCPAINT);
-            }
-            if (i == 2)
-            {
-                putimage(player.x, player.y, 60, 47, &attackb[1], 106, 0, SRCAND);
-                putimage(player.x, player.y, 60, 47, &attacka[1], 106, 0, SRCPAINT);
-            }
-            if (i == 3)
-            {
-                putimage(player.x, player.y, 50, 47, &attackb[1], 175, 0, SRCAND);
-                putimage(player.x, player.y, 50, 47, &attacka[1], 175, 0, SRCPAINT);
-            }
-            if (i == 4)
-            {
-                putimage(player.x, player.y, 33, 47, &attackb[1], 233, 0, SRCAND);
-                putimage(player.x, player.y, 33, 47, &attacka[1], 233, 0, SRCPAINT);
-            }
+            putimage(A.x, A.y, *(imb + 1) + i, SRCAND);
+            putimage(A.x, A.y, *(ima + 1) + i, SRCPAINT);
             EndBatchDraw();
-            Sleep(110);
+            Sleep(100);
         }
     }
     else
@@ -309,35 +521,19 @@ void Role::PrintAttack()
         {
             if (i >= 2 && i <= 4)
             {
-                player.x += 20;
+                if (A.face == RIGHT)
+                {
+                    A.x += 20;
+                }
+                else
+                {
+                    A.x -= 20;
+                }
             }
             BeginBatchDraw();
             PrintBackground();
-            if (i == 0 || i == 1 || i == 2)
-            {
-                putimage(player.x, player.y, 46, 44, &attackb[2], 46 * (i % 3), 0, SRCAND);
-                putimage(player.x, player.y, 46, 44, &attacka[2], 46 * (i % 3), 0, SRCPAINT);
-            }
-            if (i == 3)
-            {
-                putimage(player.x, player.y, 62, 44, &attackb[2], 138, 0, SRCAND);
-                putimage(player.x, player.y, 62, 44, &attacka[2], 138, 0, SRCPAINT);
-            }
-            if (i == 4)
-            {
-                putimage(player.x, player.y, 55, 44, &attackb[2], 209, 0, SRCAND);
-                putimage(player.x, player.y, 55, 44, &attacka[2], 209, 0, SRCPAINT);
-            }
-            if (i == 5)
-            {
-                putimage(player.x, player.y, 48, 44, &attackb[2], 283, 0, SRCAND);
-                putimage(player.x, player.y, 48, 44, &attacka[2], 283, 0, SRCPAINT);
-            }
-            if (i == 6)
-            {
-                putimage(player.x, player.y, 38, 44, &attackb[2], 331, 0, SRCAND);
-                putimage(player.x, player.y, 38, 44, &attacka[2], 331, 0, SRCPAINT);
-            }
+            putimage(A.x, A.y, *(imb + 2) + i, SRCAND);
+            putimage(A.x, A.y, *(ima + 2) + i, SRCPAINT);
             EndBatchDraw();
             Sleep(100);
         }
@@ -346,41 +542,52 @@ void Role::PrintAttack()
     {
         return;
     }
+    Sleep(100);
 }
 void Role::PrintMove()
 {
-    IsGround();
-    if (IsRun())
+    IsGround(player1);
+    if (IsRunA(player1))
     {
-        PrintRun();
+        PrintRun(player1, player2, runb, runa, Lrunb, Lruna);
     }
-    else if (IsJump())
+    else if (IsJump(player1))
     {
-        PrintJump();
-
+        if (player1.face == RIGHT)
+        {
+            PrintJump(player1, jumpb, jumpa);
+        }
+        else {
+            PrintJump(player1, Ljumpb, Ljumpa);
+        }
     }
     else if (IsAttack())
     {
-        PrintAttack();
+        if (player1.face == RIGHT)
+        {
+            PrintAttack(player1, &attackb[0], &attacka[0]);
+        }
+        else
+        {
+            PrintAttack(player1, &Lattackb[0], &Lattacka[0]);
+        }
     }
     else
     {
-        if (IsGround())
+        if (IsGround(player1))
         {
-            PrintStill();
+            PrintStill(player1, player2, &stillb[0], &stilla[0], &Lstillb[0], &Lstilla[0]);
         }
     }
     return;
 }
-
 int main()
 {
-    Role A(10, 600, -43, 38);
+    Role A(10, 600, -43, 38, 900, 600, -43, 38);
     A.Initial();
     initgraph(1280, 720);
     while (1)
     {
-        A.PrintBackground();
         A.PrintMove();
     }
     system("pause");
