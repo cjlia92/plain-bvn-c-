@@ -51,7 +51,7 @@ public:
     void PrintRun(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
     void PrintJump(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
     int IsAttack();
-    void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7]);
+    void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7]);
     void PrintMove();
     void PrintFall(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
     inline void  PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima);
@@ -319,14 +319,14 @@ void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE
         {
             if (GetAsyncKeyState('D'))
             {
-                if (A.x < 1232)
+                if (A.x + 15 < 1232)
                 {
                     A.x += 15;
                 }
             }
             if (GetAsyncKeyState('A'))
             {
-                if (A.x > 10)
+                if (A.x - 15 > 10)
                 {
                     A.x -= 15;
                 }
@@ -368,15 +368,8 @@ void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE
         }
         if (IsAttack())
         {
-            if (A.face == RIGHT)
-            {
-                PrintAttack(A, &attackb[0], &attacka[0]);
-            }
-            else
-            {
-                PrintAttack(A, &Lattackb[0], &Lattacka[0]);
-            }
-            return;
+
+            PrintAttack(A, &attackb[0], &attacka[0], &Lattackb[0], &Lattacka[0]);
         }
     }
 }
@@ -398,69 +391,11 @@ void Role::PrintJump(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAG
                 A.x -= 15;
             }
         }
-        if (GetAsyncKeyState(VK_RIGHT))
-        {
-            if (B.x < 1232)
-            {
-                B.x += 15;
-            }
-        }
-        if (GetAsyncKeyState(VK_LEFT))
-        {
-            if (B.x > 10)
-            {
-                B.x -= 15;
-            }
-        }
         BeginBatchDraw();
         PrintBackground();
-
-        if (IsJumping(A))
-        {
-            A.y -= 18;
-            PutImage(A, imb + i % 2, ima + i % 2, Limb + i % 2, Lima + i % 2);
-        }
-        else
-        {
-            if (A.face == RIGHT)
-            {
-                putimage(A.x, A.y, stillb + i % 4, SRCAND);
-                putimage(A.x, A.y, stilla + i % 4, SRCPAINT);
-            }
-            if (A.face == LEFT)
-            {
-                putimage(A.x, A.y, Lstillb + i % 4, SRCAND);
-                putimage(A.x, A.y, Lstilla + i % 4, SRCPAINT);
-            }
-        }
-
-        if (IsJumping(B))
-        {
-            B.y -= 18;
-            if (B.face == RIGHT)
-            {
-                putimage(B.x, B.y, imb + i % 2, SRCAND);
-                putimage(B.x, B.y, ima + i % 2, SRCPAINT);
-            }
-            if (B.face == LEFT)
-            {
-                putimage(B.x, B.y, Limb + i % 2, SRCAND);
-                putimage(B.x, B.y, Lima + i % 2, SRCPAINT);
-            }
-        }
-        else
-        {
-            if (B.face == RIGHT)
-            {
-                putimage(B.x, B.y, stillb + i % 4, SRCAND);
-                putimage(B.x, B.y, stilla + i % 4, SRCPAINT);
-            }
-            if (B.face == LEFT)
-            {
-                putimage(B.x, B.y, Lstillb + i % 4, SRCAND);
-                putimage(B.x, B.y, Lstilla + i % 4, SRCPAINT);
-            }
-        }
+        A.y -= 18;
+        PutImage(A, imb + i % 2, ima + i % 2, Limb + i % 2, Lima + i % 2);
+        PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
         EndBatchDraw();
         Sleep(28);
     }
@@ -498,16 +433,16 @@ void Role::PrintFall(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAG
         }
         BeginBatchDraw();
         PrintBackground();
-        putimage(A.x, A.y, imb + 2, SRCAND);
-        putimage(A.x, A.y, ima + 2, SRCPAINT);
+        PutImage(A, imb + 2, ima + 2, Limb + 2, Lima + 2);
+        PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
         EndBatchDraw();
         Sleep(25);
     }
     A.y += 18;
     BeginBatchDraw();
     PrintBackground();
-    putimage(A.x, A.y, imb + 3, SRCAND);
-    putimage(A.x, A.y, ima + 3, SRCPAINT);
+    PutImage(A, imb + 3, ima + 3, Limb + 3, Lima + 3);
+    PutImage(B, stillb + 3, stilla + 3, Lstillb + 3, Lstilla + 3);
     EndBatchDraw();
     Sleep(25);
 }
@@ -519,7 +454,7 @@ int Role::IsAttack()
     }
     return 0;
 }
-void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
+void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7], IMAGE(*Limb)[7], IMAGE(*Lima)[7])
 {
     //the first attack.
     for (int i = 0; i < 4; i++) {
@@ -533,15 +468,14 @@ void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
         }
         BeginBatchDraw();
         PrintBackground();
-        putimage(A.x, A.y, *imb + i, SRCAND);
-        putimage(A.x, A.y, *ima + i, SRCPAINT);
+        PutImage(A, *imb + i, *ima + i, *Limb + i, *Lima + i);
+        PutImage(player2, stillb + i, stilla + i, Lstillb + i, Lstilla + i);
         EndBatchDraw();
         Sleep(80);
     }
     //the second attack.
     if (IsAttack())
     {
-
         for (int i = 0; i < 5; i++)
         {
             if (A.face == RIGHT)
@@ -554,8 +488,8 @@ void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
             }
             BeginBatchDraw();
             PrintBackground();
-            putimage(A.x, A.y, *(imb + 1) + i, SRCAND);
-            putimage(A.x, A.y, *(ima + 1) + i, SRCPAINT);
+            PutImage(A, *(imb + 1) + i, *(ima + 1) + i, *(Limb + 1) + i, *(Lima + 1) + i);
+            PutImage(player2, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
             EndBatchDraw();
             Sleep(100);
         }
@@ -582,8 +516,8 @@ void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
             }
             BeginBatchDraw();
             PrintBackground();
-            putimage(A.x, A.y, *(imb + 2) + i, SRCAND);
-            putimage(A.x, A.y, *(ima + 2) + i, SRCPAINT);
+            PutImage(A, *(imb + 2) + i, *(ima + 2) + i, *(Limb + 2) + i, *(Lima + 2) + i);
+            PutImage(player2, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
             EndBatchDraw();
             Sleep(100);
         }
@@ -607,14 +541,7 @@ void Role::PrintMove()
     }
     else if (IsAttack())
     {
-        if (player1.face == RIGHT)
-        {
-            PrintAttack(player1, &attackb[0], &attacka[0]);
-        }
-        else
-        {
-            PrintAttack(player1, &Lattackb[0], &Lattacka[0]);
-        }
+        PrintAttack(player1, &attackb[0], &attacka[0], &Lattackb[0], &attacka[0]);
     }
     else
     {
