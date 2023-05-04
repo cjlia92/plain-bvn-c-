@@ -4,6 +4,7 @@
 #define RIGHT 1
 #define LEFT 0
 using namespace std;
+
 struct role
 {
     int x;
@@ -41,16 +42,20 @@ public:
     void Initial();
     void PrintBackground();
     void PrintStill(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    int IsJump(role&);
-    int IsJumping();
+    int IsJumpA(role&);
+    int IsJumpB(role&);
+    int IsJumping(role&);
     int IsGround(role&);
     int IsRunA(role&);
     int IsRunB(role&);
     void PrintRun(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    void PrintJump(role&, IMAGE*, IMAGE*);
+    void PrintJump(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
     int IsAttack();
     void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7]);
     void PrintMove();
+    void PrintFall(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
+    inline void  PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima);
+
 };
 IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa[4], jumpb[4], attacka[3][7], attackb[3][7];
 IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7];
@@ -197,62 +202,71 @@ void Role::Initial()
     loadimage(&Lattackb[2][5], _T("pictures\\Lattack\\b25.png"));
     loadimage(&Lattackb[2][6], _T("pictures\\Lattack\\b26.png"));
 }
+inline void Role::PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima) {
+    if (A.face == RIGHT)
+    {
+        putimage(A.x, A.y, imb, SRCAND);
+        putimage(A.x, A.y, ima, SRCPAINT);
+    }
+    if (A.face == LEFT)
+    {
+        putimage(A.x, A.y, Limb, SRCAND);
+        putimage(A.x, A.y, Lima, SRCPAINT);
+    }
+}
 void Role::PrintBackground()
 {
     putimage(0, 0, &background);
 }
+
 void Role::PrintStill(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
 {
     for (int i = 0; i < 4; i++)
     {
         BeginBatchDraw();
         PrintBackground();
-        if (A.face == RIGHT)
-        {
-            putimage(A.x, A.y, imb + i, SRCAND);
-            putimage(A.x, A.y, ima + i, SRCPAINT);
-        }
-        else
-        {
-            putimage(A.x, A.y, Limb + i, SRCAND);
-            putimage(A.x, A.y, Lima + i, SRCPAINT);
-        }
-        if (B.face == RIGHT)
-        {
-            putimage(B.x, B.y, imb + i, SRCAND);
-            putimage(B.x, B.y, ima + i, SRCPAINT);
-        }
-        else
-        {
-            putimage(B.x, B.y, Limb + i, SRCAND);
-            putimage(B.x, B.y, Lima + i, SRCPAINT);
-        }
+        PutImage(A, imb + i, ima + i, Limb + i, Lima + i);
+        PutImage(B, imb + i, ima + i, Limb + i, Lima + i);
         EndBatchDraw();
         Sleep(100);
-        if (IsRunA(A))
+        if (IsRunA(A) || IsRunB(B))
         {
             return;
         }
-        if (IsJump(A))
+        if (IsJumpA(A) || IsJumping(A))
+        {
+            return;
+        }
+        if (IsJumpB(B) || IsJumping(B))
         {
             return;
         }
     }
 }
-int Role::IsJump(role& A)
+int Role::IsJumpA(role& A)
 {
-
     if (GetAsyncKeyState('K') && A.Isjumping < 1)
     {
         A.Isjumping++;
-        IsGround(player1);
+        IsGround(A);
         return 1;
     }
     return 0;
 }
-int Role::IsJumping()
+int Role::IsJumpB(role& B)
 {
-    if (player1.y < 600)
+
+    if (GetAsyncKeyState(VK_NUMPAD2) && B.Isjumping < 1)
+    {
+        B.Isjumping++;
+        IsGround(B);
+        return 1;
+    }
+    return 0;
+}
+int Role::IsJumping(role& A)
+{
+    if (A.y < 600)
     {
         return 1;
     }
@@ -317,29 +331,11 @@ void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE
                     A.x -= 15;
                 }
             }
-            if (A.face == RIGHT)
-            {
-                putimage(A.x, A.y, imb + i, SRCAND);
-                putimage(A.x, A.y, ima + i, SRCPAINT);
-            }
-            if (A.face == LEFT)
-            {
-                putimage(A.x, A.y, Limb + i, SRCAND);
-                putimage(A.x, A.y, Lima + i, SRCPAINT);
-            }
+            PutImage(A, imb + i, ima + i, Limb + i, Lima + i);
         }
         else//STILL
         {
-            if (A.face == RIGHT)
-            {
-                putimage(A.x, A.y, stillb + i % 4, SRCAND);
-                putimage(A.x, A.y, stilla + i % 4, SRCPAINT);
-            }
-            else
-            {
-                putimage(A.x, A.y, Lstillb + i % 4, SRCAND);
-                putimage(A.x, A.y, Lstilla + i % 4, SRCPAINT);
-            }
+            PutImage(A, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
         }
         if (IsRunB(B))
         {
@@ -357,29 +353,18 @@ void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE
                     B.x -= 15;
                 }
             }
-            if (B.face == RIGHT)
-            {
-                putimage(B.x, B.y, imb + i, SRCAND);
-                putimage(B.x, B.y, ima + i, SRCPAINT);
-            }
-            if (B.face == LEFT)
-            {
-                putimage(B.x, B.y, Limb + i, SRCAND);
-                putimage(B.x, B.y, Lima + i, SRCPAINT);
-            }
+            PutImage(B, imb + i, ima + i, Limb + i, Lima + i);
+        }
+        else//STILL
+        {
+            PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
         }
         Sleep(50);
         EndBatchDraw();
-        if (IsJump(A))
+        if (IsJumpA(A))
         {
-            if (player1.face == RIGHT)
-            {
-                PrintJump(player1, jumpb, jumpa);
-            }
-            else {
-                PrintJump(player1, Ljumpb, Ljumpa);
-            }
-            break;
+            PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
+            return;
         }
         if (IsAttack())
         {
@@ -391,15 +376,14 @@ void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE
             {
                 PrintAttack(A, &Lattackb[0], &Lattacka[0]);
             }
-            break;
+            return;
         }
     }
 }
-void Role::PrintJump(role& A, IMAGE* imb, IMAGE* ima)
+void Role::PrintJump(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
 {
     for (int i = 0; i < 8; i++)
     {
-        A.y -= 18;
         if (GetAsyncKeyState('D'))
         {
             if (A.x < 1232)
@@ -414,22 +398,88 @@ void Role::PrintJump(role& A, IMAGE* imb, IMAGE* ima)
                 A.x -= 15;
             }
         }
+        if (GetAsyncKeyState(VK_RIGHT))
+        {
+            if (B.x < 1232)
+            {
+                B.x += 15;
+            }
+        }
+        if (GetAsyncKeyState(VK_LEFT))
+        {
+            if (B.x > 10)
+            {
+                B.x -= 15;
+            }
+        }
         BeginBatchDraw();
         PrintBackground();
-        putimage(A.x, A.y, imb + i % 2, SRCAND);
-        putimage(A.x, A.y, ima + i % 2, SRCPAINT);
+
+        if (IsJumping(A))
+        {
+            A.y -= 18;
+            PutImage(A, imb + i % 2, ima + i % 2, Limb + i % 2, Lima + i % 2);
+        }
+        else
+        {
+            if (A.face == RIGHT)
+            {
+                putimage(A.x, A.y, stillb + i % 4, SRCAND);
+                putimage(A.x, A.y, stilla + i % 4, SRCPAINT);
+            }
+            if (A.face == LEFT)
+            {
+                putimage(A.x, A.y, Lstillb + i % 4, SRCAND);
+                putimage(A.x, A.y, Lstilla + i % 4, SRCPAINT);
+            }
+        }
+
+        if (IsJumping(B))
+        {
+            B.y -= 18;
+            if (B.face == RIGHT)
+            {
+                putimage(B.x, B.y, imb + i % 2, SRCAND);
+                putimage(B.x, B.y, ima + i % 2, SRCPAINT);
+            }
+            if (B.face == LEFT)
+            {
+                putimage(B.x, B.y, Limb + i % 2, SRCAND);
+                putimage(B.x, B.y, Lima + i % 2, SRCPAINT);
+            }
+        }
+        else
+        {
+            if (B.face == RIGHT)
+            {
+                putimage(B.x, B.y, stillb + i % 4, SRCAND);
+                putimage(B.x, B.y, stilla + i % 4, SRCPAINT);
+            }
+            if (B.face == LEFT)
+            {
+                putimage(B.x, B.y, Lstillb + i % 4, SRCAND);
+                putimage(B.x, B.y, Lstilla + i % 4, SRCPAINT);
+            }
+        }
         EndBatchDraw();
         Sleep(28);
     }
-    if (IsJump(A))
+    if (IsJumpA(A))
     {
-        PrintJump(A, imb, ima);
+        PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
     }
+    if (IsJumping(A))
+    {
+        PrintFall(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
+    }
+}
+void Role::PrintFall(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
+{
     for (int i = 0; i < 7; i++)
     {
-        if (IsJump(A))
+        if (IsJumpA(A))
         {
-            PrintJump(A, imb, ima);
+            PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
         }
         A.y += 18;
         if (GetAsyncKeyState('D'))
@@ -547,19 +597,13 @@ void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7])
 void Role::PrintMove()
 {
     IsGround(player1);
-    if (IsRunA(player1))
+    if (IsRunA(player1) || IsRunB(player2))
     {
         PrintRun(player1, player2, runb, runa, Lrunb, Lruna);
     }
-    else if (IsJump(player1))
+    else if (IsJumpA(player1))
     {
-        if (player1.face == RIGHT)
-        {
-            PrintJump(player1, jumpb, jumpa);
-        }
-        else {
-            PrintJump(player1, Ljumpb, Ljumpa);
-        }
+        PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
     }
     else if (IsAttack())
     {
