@@ -54,6 +54,7 @@ public:
     void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7]);
     void PrintMove();
     void PrintFall(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
+    void PrintStruck(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE);
     inline void  PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima);
 
 };
@@ -454,6 +455,7 @@ int Role::IsAttack()
     }
     return 0;
 }
+
 void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7], IMAGE(*Limb)[7], IMAGE(*Lima)[7])
 {
     //the first attack.
