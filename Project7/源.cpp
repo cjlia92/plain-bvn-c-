@@ -1,568 +1,366 @@
-#include<graphics.h>
-#include<conio.h>
-#include <iostream>
-#define RIGHT 1
-#define LEFT 0
-using namespace std;
+/******************************************************
+ * EasyX Library for C++ (Ver:20220901)
+ * https://easyx.cn
+ *
+ * EasyX.h
+ *		Provides the latest API.
+ ******************************************************/
 
-struct role
+#pragma once
+
+#ifndef WINVER
+#define WINVER 0x0400			// Specifies that the minimum required platform is Windows 95 and Windows NT 4.0.
+#endif
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500		// Specifies that the minimum required platform is Windows 2000
+#endif
+
+#ifndef _WIN32_WINDOWS
+#define _WIN32_WINDOWS 0x0410	// Specifies that the minimum required platform is Windows 98
+#endif
+
+#ifdef UNICODE
+#pragma comment(lib,"EasyXw.lib")
+#else
+#pragma comment(lib,"EasyXa.lib")
+#endif
+
+
+#ifndef __cplusplus
+#error EasyX is only for C++
+#endif
+
+#include <windows.h>
+#include <tchar.h>
+
+ // EasyX Window Properties
+#define EX_SHOWCONSOLE		1		// Maintain the console window when creating a graphics window
+#define EX_NOCLOSE			2		// Disable the close button
+#define EX_NOMINIMIZE		4		// Disable the minimize button
+#define EX_DBLCLKS			8		// Support double-click events
+
+
+// Color constant
+#define	BLACK			0
+#define	BLUE			0xAA0000
+#define	GREEN			0x00AA00
+#define	CYAN			0xAAAA00
+#define	RED				0x0000AA
+#define	MAGENTA			0xAA00AA
+#define	BROWN			0x0055AA
+#define	LIGHTGRAY		0xAAAAAA
+#define	DARKGRAY		0x555555
+#define	LIGHTBLUE		0xFF5555
+#define	LIGHTGREEN		0x55FF55
+#define	LIGHTCYAN		0xFFFF55
+#define	LIGHTRED		0x5555FF
+#define	LIGHTMAGENTA	0xFF55FF
+#define	YELLOW			0x55FFFF
+#define	WHITE			0xFFFFFF
+
+// Color conversion macro
+#define BGR(color)	( (((color) & 0xFF) << 16) | ((color) & 0xFF00FF00) | (((color) & 0xFF0000) >> 16) )
+
+
+class IMAGE;
+
+// Line style class
+class LINESTYLE
 {
-    int x;
-    int y;
-    int height;
-    int width;
-    int Isjumping;//Jugde how many times the role has jumped.
-    int Isattacking;//Jugde how many times the role has attacked.
-    bool face;
-};
-struct Attackwind
-{
-    int x;
-    int y;
-    int width;
-    int height;
-};
-class Role {
 public:
-    role player1;
-    role player2;
-    Role(int a, int b, int c, int d, int e, int f, int g, int h)
-    {
-        player1.x = a;
-        player1.y = b;
-        player1.height = c;
-        player1.width = d;
-        player1.face = RIGHT;
-        player2.x = e;
-        player2.y = f;
-        player2.height = g;
-        player2.width = h;
-        player2.face = LEFT;
-    }
-    void Initial();
-    void PrintBackground();
-    void PrintStill(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    int IsJumpA(role&);
-    int IsJumpB(role&);
-    int IsJumping(role&);
-    int IsGround(role&);
-    int IsRunA(role&);
-    int IsRunB(role&);
-    void PrintRun(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    void PrintJump(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    int IsAttack();
-    void PrintAttack(role&, IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7], IMAGE(*)[7]);
-    void PrintMove();
-    void PrintFall(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE*);
-    void PrintStruck(role&, role&, IMAGE*, IMAGE*, IMAGE*, IMAGE);
-    inline void  PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima);
+	LINESTYLE();
+	LINESTYLE(const LINESTYLE& style);
+	LINESTYLE& operator = (const LINESTYLE& style);
+	virtual ~LINESTYLE();
 
+	DWORD	style;
+	DWORD	thickness;
+	DWORD* puserstyle;
+	DWORD	userstylecount;
 };
-IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa[4], jumpb[4], attacka[3][7], attackb[3][7];
-IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7];
-void Role::Initial()
-{
-    //background.
-    loadimage(&background, _T("pictures\\background\\0.png"));
-    //still
-    loadimage(&stilla[0], _T("pictures\\still\\a0.png"));
-    loadimage(&stilla[1], _T("pictures\\still\\a1.png"));
-    loadimage(&stilla[2], _T("pictures\\still\\a2.png"));
-    loadimage(&stilla[3], _T("pictures\\still\\a3.png"));
-    loadimage(&stillb[0], _T("pictures\\still\\b0.png"));
-    loadimage(&stillb[1], _T("pictures\\still\\b1.png"));
-    loadimage(&stillb[2], _T("pictures\\still\\b2.png"));
-    loadimage(&stillb[3], _T("pictures\\still\\b3.png"));
-    //Lstill
-    loadimage(&Lstilla[0], _T("pictures\\Lstill\\a0.png"));
-    loadimage(&Lstilla[1], _T("pictures\\Lstill\\a1.png"));
-    loadimage(&Lstilla[2], _T("pictures\\Lstill\\a2.png"));
-    loadimage(&Lstilla[3], _T("pictures\\Lstill\\a3.png"));
-    loadimage(&Lstillb[0], _T("pictures\\Lstill\\b0.png"));
-    loadimage(&Lstillb[1], _T("pictures\\Lstill\\b1.png"));
-    loadimage(&Lstillb[2], _T("pictures\\Lstill\\b2.png"));
-    loadimage(&Lstillb[3], _T("pictures\\Lstill\\b3.png"));
 
-    //run
-    loadimage(&runa[0], _T("pictures\\run\\a0.png"));
-    loadimage(&runa[1], _T("pictures\\run\\a1.png"));
-    loadimage(&runa[2], _T("pictures\\run\\a2.png"));
-    loadimage(&runa[3], _T("pictures\\run\\a3.png"));
-    loadimage(&runa[4], _T("pictures\\run\\a4.png"));
-    loadimage(&runa[5], _T("pictures\\run\\a5.png"));
-    loadimage(&runa[6], _T("pictures\\run\\a6.png"));
-    loadimage(&runa[7], _T("pictures\\run\\a7.png"));
-    loadimage(&runb[0], _T("pictures\\run\\b0.png"));
-    loadimage(&runb[1], _T("pictures\\run\\b1.png"));
-    loadimage(&runb[2], _T("pictures\\run\\b2.png"));
-    loadimage(&runb[3], _T("pictures\\run\\b3.png"));
-    loadimage(&runb[4], _T("pictures\\run\\b4.png"));
-    loadimage(&runb[5], _T("pictures\\run\\b5.png"));
-    loadimage(&runb[6], _T("pictures\\run\\b6.png"));
-    loadimage(&runb[7], _T("pictures\\run\\b7.png"));
-    //Lrun
-    loadimage(&Lruna[0], _T("pictures\\Lrun\\a0.png"));
-    loadimage(&Lruna[1], _T("pictures\\Lrun\\a1.png"));
-    loadimage(&Lruna[2], _T("pictures\\Lrun\\a2.png"));
-    loadimage(&Lruna[3], _T("pictures\\Lrun\\a3.png"));
-    loadimage(&Lruna[4], _T("pictures\\Lrun\\a4.png"));
-    loadimage(&Lruna[5], _T("pictures\\Lrun\\a5.png"));
-    loadimage(&Lruna[6], _T("pictures\\Lrun\\a6.png"));
-    loadimage(&Lruna[7], _T("pictures\\Lrun\\a7.png"));
-    loadimage(&Lrunb[0], _T("pictures\\Lrun\\b0.png"));
-    loadimage(&Lrunb[1], _T("pictures\\Lrun\\b1.png"));
-    loadimage(&Lrunb[2], _T("pictures\\Lrun\\b2.png"));
-    loadimage(&Lrunb[3], _T("pictures\\Lrun\\b3.png"));
-    loadimage(&Lrunb[4], _T("pictures\\Lrun\\b4.png"));
-    loadimage(&Lrunb[5], _T("pictures\\Lrun\\b5.png"));
-    loadimage(&Lrunb[6], _T("pictures\\Lrun\\b6.png"));
-    loadimage(&Lrunb[7], _T("pictures\\Lrun\\b7.png"));
-    //jump
-    loadimage(&jumpa[0], _T("pictures\\jump\\a0.png"));
-    loadimage(&jumpa[1], _T("pictures\\jump\\a1.png"));
-    loadimage(&jumpa[2], _T("pictures\\jump\\a2.png"));
-    loadimage(&jumpa[3], _T("pictures\\jump\\a3.png"));
-    loadimage(&jumpb[0], _T("pictures\\jump\\b0.png"));
-    loadimage(&jumpb[1], _T("pictures\\jump\\b1.png"));
-    loadimage(&jumpb[2], _T("pictures\\jump\\b2.png"));
-    loadimage(&jumpb[3], _T("pictures\\jump\\b3.png"));
-    //Ljump
-    loadimage(&Ljumpa[0], _T("pictures\\Ljump\\a0.png"));
-    loadimage(&Ljumpa[1], _T("pictures\\Ljump\\a1.png"));
-    loadimage(&Ljumpa[2], _T("pictures\\Ljump\\a2.png"));
-    loadimage(&Ljumpa[3], _T("pictures\\Ljump\\a3.png"));
-    loadimage(&Ljumpb[0], _T("pictures\\Ljump\\b0.png"));
-    loadimage(&Ljumpb[1], _T("pictures\\Ljump\\b1.png"));
-    loadimage(&Ljumpb[2], _T("pictures\\Ljump\\b2.png"));
-    loadimage(&Ljumpb[3], _T("pictures\\Ljump\\b3.png"));
+// Fill style class
+class FILLSTYLE
+{
+public:
+	FILLSTYLE();
+	FILLSTYLE(const FILLSTYLE& style);
+	FILLSTYLE& operator = (const FILLSTYLE& style);
+	virtual ~FILLSTYLE();
 
-    //attack
-    loadimage(&attacka[0][0], _T("pictures\\attack\\a00.png"));
-    loadimage(&attacka[0][1], _T("pictures\\attack\\a01.png"));
-    loadimage(&attacka[0][2], _T("pictures\\attack\\a02.png"));
-    loadimage(&attacka[0][3], _T("pictures\\attack\\a03.png"));
-    loadimage(&attacka[1][0], _T("pictures\\attack\\a10.png"));
-    loadimage(&attacka[1][1], _T("pictures\\attack\\a11.png"));
-    loadimage(&attacka[1][2], _T("pictures\\attack\\a12.png"));
-    loadimage(&attacka[1][3], _T("pictures\\attack\\a13.png"));
-    loadimage(&attacka[1][4], _T("pictures\\attack\\a14.png"));
-    loadimage(&attacka[2][0], _T("pictures\\attack\\a20.png"));
-    loadimage(&attacka[2][1], _T("pictures\\attack\\a21.png"));
-    loadimage(&attacka[2][2], _T("pictures\\attack\\a22.png"));
-    loadimage(&attacka[2][3], _T("pictures\\attack\\a23.png"));
-    loadimage(&attacka[2][4], _T("pictures\\attack\\a24.png"));
-    loadimage(&attacka[2][5], _T("pictures\\attack\\a25.png"));
-    loadimage(&attacka[2][6], _T("pictures\\attack\\a26.png"));
-    loadimage(&attackb[0][0], _T("pictures\\attack\\b00.png"));
-    loadimage(&attackb[0][1], _T("pictures\\attack\\b01.png"));
-    loadimage(&attackb[0][2], _T("pictures\\attack\\b02.png"));
-    loadimage(&attackb[0][3], _T("pictures\\attack\\b03.png"));
-    loadimage(&attackb[1][0], _T("pictures\\attack\\b10.png"));
-    loadimage(&attackb[1][1], _T("pictures\\attack\\b11.png"));
-    loadimage(&attackb[1][2], _T("pictures\\attack\\b12.png"));
-    loadimage(&attackb[1][3], _T("pictures\\attack\\b13.png"));
-    loadimage(&attackb[1][4], _T("pictures\\attack\\b14.png"));
-    loadimage(&attackb[2][0], _T("pictures\\attack\\b20.png"));
-    loadimage(&attackb[2][1], _T("pictures\\attack\\b21.png"));
-    loadimage(&attackb[2][2], _T("pictures\\attack\\b22.png"));
-    loadimage(&attackb[2][3], _T("pictures\\attack\\b23.png"));
-    loadimage(&attackb[2][4], _T("pictures\\attack\\b24.png"));
-    loadimage(&attackb[2][5], _T("pictures\\attack\\b25.png"));
-    loadimage(&attackb[2][6], _T("pictures\\attack\\b26.png"));
-    //Lattack
-    loadimage(&Lattacka[0][0], _T("pictures\\Lattack\\a00.png"));
-    loadimage(&Lattacka[0][1], _T("pictures\\Lattack\\a01.png"));
-    loadimage(&Lattacka[0][2], _T("pictures\\Lattack\\a02.png"));
-    loadimage(&Lattacka[0][3], _T("pictures\\Lattack\\a03.png"));
-    loadimage(&Lattacka[1][0], _T("pictures\\Lattack\\a10.png"));
-    loadimage(&Lattacka[1][1], _T("pictures\\Lattack\\a11.png"));
-    loadimage(&Lattacka[1][2], _T("pictures\\Lattack\\a12.png"));
-    loadimage(&Lattacka[1][3], _T("pictures\\Lattack\\a13.png"));
-    loadimage(&Lattacka[1][4], _T("pictures\\Lattack\\a14.png"));
-    loadimage(&Lattacka[2][0], _T("pictures\\Lattack\\a20.png"));
-    loadimage(&Lattacka[2][1], _T("pictures\\Lattack\\a21.png"));
-    loadimage(&Lattacka[2][2], _T("pictures\\Lattack\\a22.png"));
-    loadimage(&Lattacka[2][3], _T("pictures\\Lattack\\a23.png"));
-    loadimage(&Lattacka[2][4], _T("pictures\\Lattack\\a24.png"));
-    loadimage(&Lattacka[2][5], _T("pictures\\Lattack\\a25.png"));
-    loadimage(&Lattacka[2][6], _T("pictures\\Lattack\\a26.png"));
-    loadimage(&Lattackb[0][0], _T("pictures\\Lattack\\b00.png"));
-    loadimage(&Lattackb[0][1], _T("pictures\\Lattack\\b01.png"));
-    loadimage(&Lattackb[0][2], _T("pictures\\Lattack\\b02.png"));
-    loadimage(&Lattackb[0][3], _T("pictures\\Lattack\\b03.png"));
-    loadimage(&Lattackb[1][0], _T("pictures\\Lattack\\b10.png"));
-    loadimage(&Lattackb[1][1], _T("pictures\\Lattack\\b11.png"));
-    loadimage(&Lattackb[1][2], _T("pictures\\Lattack\\b12.png"));
-    loadimage(&Lattackb[1][3], _T("pictures\\Lattack\\b13.png"));
-    loadimage(&Lattackb[1][4], _T("pictures\\Lattack\\b14.png"));
-    loadimage(&Lattackb[2][0], _T("pictures\\Lattack\\b20.png"));
-    loadimage(&Lattackb[2][1], _T("pictures\\Lattack\\b21.png"));
-    loadimage(&Lattackb[2][2], _T("pictures\\Lattack\\b22.png"));
-    loadimage(&Lattackb[2][3], _T("pictures\\Lattack\\b23.png"));
-    loadimage(&Lattackb[2][4], _T("pictures\\Lattack\\b24.png"));
-    loadimage(&Lattackb[2][5], _T("pictures\\Lattack\\b25.png"));
-    loadimage(&Lattackb[2][6], _T("pictures\\Lattack\\b26.png"));
-}
-inline void Role::PutImage(role& A, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima) {
-    if (A.face == RIGHT)
-    {
-        putimage(A.x, A.y, imb, SRCAND);
-        putimage(A.x, A.y, ima, SRCPAINT);
-    }
-    if (A.face == LEFT)
-    {
-        putimage(A.x, A.y, Limb, SRCAND);
-        putimage(A.x, A.y, Lima, SRCPAINT);
-    }
-}
-void Role::PrintBackground()
-{
-    putimage(0, 0, &background);
-}
+	int			style;				// Fill style
+	long		hatch;				// Hatch pattern
+	IMAGE* ppattern;			// Fill image
+};
 
-void Role::PrintStill(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
+// Image class
+class IMAGE
 {
-    for (int i = 0; i < 4; i++)
-    {
-        BeginBatchDraw();
-        PrintBackground();
-        PutImage(A, imb + i, ima + i, Limb + i, Lima + i);
-        PutImage(B, imb + i, ima + i, Limb + i, Lima + i);
-        EndBatchDraw();
-        Sleep(100);
-        if (IsRunA(A) || IsRunB(B))
-        {
-            return;
-        }
-        if (IsJumpA(A) || IsJumping(A))
-        {
-            return;
-        }
-        if (IsJumpB(B) || IsJumping(B))
-        {
-            return;
-        }
-    }
-}
-int Role::IsJumpA(role& A)
-{
-    if (GetAsyncKeyState('K') && A.Isjumping < 1)
-    {
-        A.Isjumping++;
-        IsGround(A);
-        return 1;
-    }
-    return 0;
-}
-int Role::IsJumpB(role& B)
-{
+public:
+	int getwidth() const;			// Get the width of the image
+	int getheight() const;			// Get the height of the image
 
-    if (GetAsyncKeyState(VK_NUMPAD2) && B.Isjumping < 1)
-    {
-        B.Isjumping++;
-        IsGround(B);
-        return 1;
-    }
-    return 0;
-}
-int Role::IsJumping(role& A)
-{
-    if (A.y < 600)
-    {
-        return 1;
-    }
-    return 0;
-}
-int Role::IsGround(role& A)
-{
-    if (player1.y == 600)
-    {
-        A.Isjumping = 0;
-        return 1;
-    }
-    return 0;
-}
-int Role::IsRunA(role& A)
-{
-    if (GetAsyncKeyState('D'))
-    {
-        A.face = RIGHT;
-        return 1;
-    }
-    if (GetAsyncKeyState('A'))
-    {
-        A.face = LEFT;
-        return 1;
-    }
-    return 0;
-}
-int Role::IsRunB(role& B)
-{
-    if (GetAsyncKeyState(VK_RIGHT))
-    {
-        B.face = RIGHT;
-        return 1;
-    }
-    if (GetAsyncKeyState(VK_LEFT))
-    {
-        B.face = LEFT;
-        return 1;
-    }
-    return 0;
-}
-void Role::PrintRun(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)//more variables make running process move smooth.
-{
-    for (int i = 0; i < 8; i++)
-    {
-        BeginBatchDraw();
-        PrintBackground();
-        if (IsRunA(A))
-        {
-            if (GetAsyncKeyState('D'))
-            {
-                if (A.x + 15 < 1232)
-                {
-                    A.x += 15;
-                }
-            }
-            if (GetAsyncKeyState('A'))
-            {
-                if (A.x - 15 > 10)
-                {
-                    A.x -= 15;
-                }
-            }
-            PutImage(A, imb + i, ima + i, Limb + i, Lima + i);
-        }
-        else//STILL
-        {
-            PutImage(A, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-        }
-        if (IsRunB(B))
-        {
-            if (GetAsyncKeyState(VK_RIGHT))
-            {
-                if (B.x < 1232)
-                {
-                    B.x += 15;
-                }
-            }
-            if (GetAsyncKeyState(VK_LEFT))
-            {
-                if (B.x > 10)
-                {
-                    B.x -= 15;
-                }
-            }
-            PutImage(B, imb + i, ima + i, Limb + i, Lima + i);
-        }
-        else//STILL
-        {
-            PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-        }
-        Sleep(50);
-        EndBatchDraw();
-        if (IsJumpA(A))
-        {
-            PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
-            return;
-        }
-        if (IsAttack())
-        {
+private:
+	int			width, height;		// Width and height of the image
+	HBITMAP		m_hBmp;
+	HDC			m_hMemDC;
+	float		m_data[6];
+	COLORREF	m_LineColor;		// Current line color
+	COLORREF	m_FillColor;		// Current fill color
+	COLORREF	m_TextColor;		// Current text color
+	COLORREF	m_BkColor;			// Current background color
+	DWORD* m_pBuffer;			// Memory buffer of the image
 
-            PrintAttack(A, &attackb[0], &attacka[0], &Lattackb[0], &Lattacka[0]);
-        }
-    }
-}
-void Role::PrintJump(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
-{
-    for (int i = 0; i < 8; i++)
-    {
-        if (GetAsyncKeyState('D'))
-        {
-            if (A.x < 1232)
-            {
-                A.x += 15;
-            }
-        }
-        if (GetAsyncKeyState('A'))
-        {
-            if (A.x > 10)
-            {
-                A.x -= 15;
-            }
-        }
-        BeginBatchDraw();
-        PrintBackground();
-        A.y -= 18;
-        PutImage(A, imb + i % 2, ima + i % 2, Limb + i % 2, Lima + i % 2);
-        PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-        EndBatchDraw();
-        Sleep(28);
-    }
-    if (IsJumpA(A))
-    {
-        PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
-    }
-    if (IsJumping(A))
-    {
-        PrintFall(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
-    }
-}
-void Role::PrintFall(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
-{
-    for (int i = 0; i < 7; i++)
-    {
-        if (IsJumpA(A))
-        {
-            PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
-        }
-        A.y += 18;
-        if (GetAsyncKeyState('D'))
-        {
-            if (A.x < 1232)
-            {
-                A.x += 15;
-            }
-        }
-        if (GetAsyncKeyState('A'))
-        {
-            if (A.x > 10)
-            {
-                A.x -= 15;
-            }
-        }
-        BeginBatchDraw();
-        PrintBackground();
-        PutImage(A, imb + 2, ima + 2, Limb + 2, Lima + 2);
-        PutImage(B, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-        EndBatchDraw();
-        Sleep(25);
-    }
-    A.y += 18;
-    BeginBatchDraw();
-    PrintBackground();
-    PutImage(A, imb + 3, ima + 3, Limb + 3, Lima + 3);
-    PutImage(B, stillb + 3, stilla + 3, Lstillb + 3, Lstilla + 3);
-    EndBatchDraw();
-    Sleep(25);
-}
-int Role::IsAttack()
-{
-    if (GetAsyncKeyState('J'))
-    {
-        return 1;
-    }
-    return 0;
-}
+	LINESTYLE	m_LineStyle;		// Current line style
+	FILLSTYLE	m_FillStyle;		// Current fill style
 
-void Role::PrintAttack(role& A, IMAGE(*imb)[7], IMAGE(*ima)[7], IMAGE(*Limb)[7], IMAGE(*Lima)[7])
+	virtual void SetDefault();		// Set the graphics environment as default
+
+public:
+	IMAGE(int _width = 0, int _height = 0);
+	IMAGE(const IMAGE& img);
+	IMAGE& operator = (const IMAGE& img);
+	virtual ~IMAGE();
+	virtual void Resize(int _width, int _height);			// Resize image
+};
+
+
+
+// Graphics window related functions
+
+HWND initgraph(int width, int height, int flag = 0);		// Create graphics window
+void closegraph();											// Close graphics window
+
+
+// Graphics environment related functions
+
+void cleardevice();											// Clear device
+void setcliprgn(HRGN hrgn);									// Set clip region
+void clearcliprgn();										// Clear clip region
+
+void getlinestyle(LINESTYLE* pstyle);						// Get line style
+void setlinestyle(const LINESTYLE* pstyle);					// Set line style
+void setlinestyle(int style, int thickness = 1, const DWORD* puserstyle = NULL, DWORD userstylecount = 0);	// Set line style
+void getfillstyle(FILLSTYLE* pstyle);						// Get fill style
+void setfillstyle(const FILLSTYLE* pstyle);					// Set fill style
+void setfillstyle(int style, long hatch = NULL, IMAGE* ppattern = NULL);		// Set fill style
+void setfillstyle(BYTE* ppattern8x8);						// Set fill style
+
+void setorigin(int x, int y);								// Set coordinate origin
+void getaspectratio(float* pxasp, float* pyasp);			// Get aspect ratio
+void setaspectratio(float xasp, float yasp);				// Set aspect ratio
+
+int  getrop2();						// Get binary raster operation mode
+void setrop2(int mode);				// Set binary raster operation mode
+int  getpolyfillmode();				// Get polygon fill mode
+void setpolyfillmode(int mode);		// Set polygon fill mode
+
+void graphdefaults();				// Reset the graphics environment as default
+
+COLORREF getlinecolor();			// Get line color
+void setlinecolor(COLORREF color);	// Set line color
+COLORREF gettextcolor();			// Get text color
+void settextcolor(COLORREF color);	// Set text color
+COLORREF getfillcolor();			// Get fill color
+void setfillcolor(COLORREF color);	// Set fill color
+COLORREF getbkcolor();				// Get background color
+void setbkcolor(COLORREF color);	// Set background color
+int  getbkmode();					// Get background mode
+void setbkmode(int mode);			// Set background mode
+
+// Color model transformation related functions
+COLORREF RGBtoGRAY(COLORREF rgb);
+void RGBtoHSL(COLORREF rgb, float* H, float* S, float* L);
+void RGBtoHSV(COLORREF rgb, float* H, float* S, float* V);
+COLORREF HSLtoRGB(float H, float S, float L);
+COLORREF HSVtoRGB(float H, float S, float V);
+
+
+// Drawing related functions
+
+COLORREF getpixel(int x, int y);				// Get pixel color
+void putpixel(int x, int y, COLORREF color);	// Set pixel color
+
+void line(int x1, int y1, int x2, int y2);		// Draw a line
+
+void rectangle(int left, int top, int right, int bottom);	// Draw a rectangle without filling
+void fillrectangle(int left, int top, int right, int bottom);	// Draw a filled rectangle with a border
+void solidrectangle(int left, int top, int right, int bottom);	// Draw a filled rectangle without a border
+void clearrectangle(int left, int top, int right, int bottom);	// Clear a rectangular region
+
+void circle(int x, int y, int radius);		// Draw a circle without filling
+void fillcircle(int x, int y, int radius);		// Draw a filled circle with a border
+void solidcircle(int x, int y, int radius);		// Draw a filled circle without a border
+void clearcircle(int x, int y, int radius);		// Clear a circular region
+
+void ellipse(int left, int top, int right, int bottom);	// Draw an ellipse without filling
+void fillellipse(int left, int top, int right, int bottom);	// Draw a filled ellipse with a border
+void solidellipse(int left, int top, int right, int bottom);	// Draw a filled ellipse without a border
+void clearellipse(int left, int top, int right, int bottom);	// Clear an elliptical region
+
+void roundrect(int left, int top, int right, int bottom, int ellipsewidth, int ellipseheight);		// Draw a rounded rectangle without filling
+void fillroundrect(int left, int top, int right, int bottom, int ellipsewidth, int ellipseheight);		// Draw a filled rounded rectangle with a border
+void solidroundrect(int left, int top, int right, int bottom, int ellipsewidth, int ellipseheight);		// Draw a filled rounded rectangle without a border
+void clearroundrect(int left, int top, int right, int bottom, int ellipsewidth, int ellipseheight);		// Clear a rounded rectangular region
+
+void arc(int left, int top, int right, int bottom, double stangle, double endangle);	// Draw an arc
+void pie(int left, int top, int right, int bottom, double stangle, double endangle);	// Draw a sector without filling
+void fillpie(int left, int top, int right, int bottom, double stangle, double endangle);	// Draw a filled sector with a border
+void solidpie(int left, int top, int right, int bottom, double stangle, double endangle);	// Draw a filled sector without a border
+void clearpie(int left, int top, int right, int bottom, double stangle, double endangle);	// Clear a rounded rectangular region
+
+void polyline(const POINT* points, int num);								// Draw multiple consecutive lines
+void polygon(const POINT* points, int num);								// Draw a polygon without filling
+void fillpolygon(const POINT* points, int num);								// Draw a filled polygon with a border
+void solidpolygon(const POINT* points, int num);								// Draw a filled polygon without a border
+void clearpolygon(const POINT* points, int num);								// Clear a polygon region
+
+void polybezier(const POINT* points, int num);									// Draw three square Bezier curves
+void floodfill(int x, int y, COLORREF color, int filltype = FLOODFILLBORDER);	// Fill the area
+
+
+
+// Text related functions
+void outtextxy(int x, int y, LPCTSTR str);				// Output a string at the specified location
+void outtextxy(int x, int y, TCHAR c);					// Output a char at the specified location
+int textwidth(LPCTSTR str);								// Get the width of a string
+int textwidth(TCHAR c);									// Get the width of a char
+int textheight(LPCTSTR str);							// Get the height of a string
+int textheight(TCHAR c);								// Get the height of a char
+int drawtext(LPCTSTR str, RECT* pRect, UINT uFormat);	// Output a string in the specified format within the specified area.
+int drawtext(TCHAR c, RECT* pRect, UINT uFormat);		// Output a char in the specified format within the specified area.
+
+// Set current text style.
+//		nHeight: The height of the text
+//		nWidth: The average width of the character. If 0, the scale is adaptive.
+//		lpszFace: The font name
+//		nEscapement: The writing angle of the string, 0.1 degrees, defaults to 0.
+//		nOrientation: The writing angle of each character, 0.1 degrees, defaults to 0.
+//		nWeight: The stroke weight of the character
+//		bItalic: Specify whether the font is italic
+//		bUnderline: Specify whether the font is underlined
+//		bStrikeOut: Specify whether the font has a strikeout
+//		fbCharSet: Specifies the character set
+//		fbOutPrecision: Specifies the output accuracy of the text
+//		fbClipPrecision: Specifies the clip accuracy of the text
+//		fbQuality: Specifies the output quality of the text
+//		fbPitchAndFamily: Specifies a font family that describes a font in a general way
+void settextstyle(int nHeight, int nWidth, LPCTSTR lpszFace);
+void settextstyle(int nHeight, int nWidth, LPCTSTR lpszFace, int nEscapement, int nOrientation, int nWeight, bool bItalic, bool bUnderline, bool bStrikeOut);
+void settextstyle(int nHeight, int nWidth, LPCTSTR lpszFace, int nEscapement, int nOrientation, int nWeight, bool bItalic, bool bUnderline, bool bStrikeOut, BYTE fbCharSet, BYTE fbOutPrecision, BYTE fbClipPrecision, BYTE fbQuality, BYTE fbPitchAndFamily);
+void settextstyle(const LOGFONT* font);	// Set current text style
+void gettextstyle(LOGFONT* font);		// Get current text style
+
+
+
+// Image related functions
+void loadimage(IMAGE* pDstImg, LPCTSTR pImgFile, int nWidth = 0, int nHeight = 0, bool bResize = false);					// Load image from a file (bmp/gif/jpg/png/tif/emf/wmf/ico)
+void loadimage(IMAGE* pDstImg, LPCTSTR pResType, LPCTSTR pResName, int nWidth = 0, int nHeight = 0, bool bResize = false);	// Load image from resources (bmp/gif/jpg/png/tif/emf/wmf/ico)
+void saveimage(LPCTSTR pImgFile, IMAGE* pImg = NULL);																		// Save image to a file (bmp/gif/jpg/png/tif)
+void getimage(IMAGE* pDstImg, int srcX, int srcY, int srcWidth, int srcHeight);												// Get image from device
+void putimage(int dstX, int dstY, const IMAGE* pSrcImg, DWORD dwRop = SRCCOPY);												// Put image to device
+void putimage(int dstX, int dstY, int dstWidth, int dstHeight, const IMAGE* pSrcImg, int srcX, int srcY, DWORD dwRop = SRCCOPY);		// Put image to device
+void rotateimage(IMAGE* dstimg, IMAGE* srcimg, double radian, COLORREF bkcolor = BLACK, bool autosize = false, bool highquality = true);// Rotate image
+void Resize(IMAGE* pImg, int width, int height);	// Resize the device
+DWORD* GetImageBuffer(IMAGE* pImg = NULL);			// Get the display buffer of the graphics device
+IMAGE* GetWorkingImage();							// Get current graphics device
+void SetWorkingImage(IMAGE* pImg = NULL);			// Set current graphics device
+HDC GetImageHDC(IMAGE* pImg = NULL);				// Get the graphics device handle
+
+
+// Other functions
+
+int	getwidth();			// Get the width of current graphics device
+int	getheight();		// Get the height of current graphics device
+
+void BeginBatchDraw();	// Begin batch drawing mode
+void FlushBatchDraw();	// Refreshes the undisplayed drawing
+void FlushBatchDraw(int left, int top, int right, int bottom);	// Refreshes the undisplayed drawing
+void EndBatchDraw();	// End batch drawing mode and refreshes the undisplayed drawing
+void EndBatchDraw(int left, int top, int right, int bottom);	// End batch drawing mode and refreshes the undisplayed drawing
+
+HWND GetHWnd();								// Get the handle of the graphics window
+const TCHAR* GetEasyXVer();						// Get version of EasyX library
+
+// Get user input as a dialog box
+bool InputBox(LPTSTR pString, int nMaxCount, LPCTSTR pPrompt = NULL, LPCTSTR pTitle = NULL, LPCTSTR pDefault = NULL, int width = 0, int height = 0, bool bOnlyOK = true);
+
+
+
+// Message
+//
+//	Category	Type				Description
+//
+//	EX_MOUSE	WM_MOUSEMOVE		Mouse moves
+//				WM_MOUSEWHEEL		Mouse wheel is rotated
+//				WM_LBUTTONDOWN		Left mouse button is pressed
+//				WM_LBUTTONUP		Left mouse button is released
+//				WM_LBUTTONDBLCLK	Left mouse button is double-clicked
+//				WM_MBUTTONDOWN		Middle mouse button is pressed
+//				WM_MBUTTONUP		Middle mouse button is released
+//				WM_MBUTTONDBLCLK	Middle mouse button is double-clicked
+//				WM_RBUTTONDOWN		Right mouse button is pressed
+//				WM_RBUTTONUP		Right mouse button is released
+//				WM_RBUTTONDBLCLK	Right mouse button is double-clicked
+//
+//	EX_KEY		WM_KEYDOWN			A key is pressed
+//				WM_KEYUP			A key is released
+//
+//	EX_CHAR		WM_CHAR
+//
+//	EX_WINDOW	WM_ACTIVATE			The window is activated or deactivated
+//				WM_MOVE				The window has been moved
+//				WM_SIZE				The size of window has changed
+
+// Message Category
+#define EX_MOUSE	1
+#define EX_KEY		2
+#define EX_CHAR		4
+#define EX_WINDOW	8
+
+// Message Structure
+struct ExMessage
 {
-    //the first attack.
-    for (int i = 0; i < 4; i++) {
-        if (A.face == RIGHT)
-        {
-            A.x += 4;
-        }
-        else
-        {
-            A.x -= 4;
-        }
-        BeginBatchDraw();
-        PrintBackground();
-        PutImage(A, *imb + i, *ima + i, *Limb + i, *Lima + i);
-        PutImage(player2, stillb + i, stilla + i, Lstillb + i, Lstilla + i);
-        EndBatchDraw();
-        Sleep(80);
-    }
-    //the second attack.
-    if (IsAttack())
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            if (A.face == RIGHT)
-            {
-                A.x += 4;
-            }
-            else
-            {
-                A.x -= 4;
-            }
-            BeginBatchDraw();
-            PrintBackground();
-            PutImage(A, *(imb + 1) + i, *(ima + 1) + i, *(Limb + 1) + i, *(Lima + 1) + i);
-            PutImage(player2, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-            EndBatchDraw();
-            Sleep(100);
-        }
-    }
-    else
-    {
-        return;
-    }
-    //the third attack.
-    if (IsAttack())
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            if (i >= 2 && i <= 4)
-            {
-                if (A.face == RIGHT)
-                {
-                    A.x += 20;
-                }
-                else
-                {
-                    A.x -= 20;
-                }
-            }
-            BeginBatchDraw();
-            PrintBackground();
-            PutImage(A, *(imb + 2) + i, *(ima + 2) + i, *(Limb + 2) + i, *(Lima + 2) + i);
-            PutImage(player2, stillb + i % 4, stilla + i % 4, Lstillb + i % 4, Lstilla + i % 4);
-            EndBatchDraw();
-            Sleep(100);
-        }
-    }
-    else
-    {
-        return;
-    }
-    Sleep(100);
-}
-void Role::PrintMove()
-{
-    IsGround(player1);
-    if (IsRunA(player1) || IsRunB(player2))
-    {
-        PrintRun(player1, player2, runb, runa, Lrunb, Lruna);
-    }
-    else if (IsJumpA(player1))
-    {
-        PrintJump(player1, player2, jumpb, jumpa, Ljumpb, Ljumpa);
-    }
-    else if (IsAttack())
-    {
-        PrintAttack(player1, &attackb[0], &attacka[0], &Lattackb[0], &attacka[0]);
-    }
-    else
-    {
-        if (IsGround(player1))
-        {
-            PrintStill(player1, player2, &stillb[0], &stilla[0], &Lstillb[0], &Lstilla[0]);
-        }
-    }
-    return;
-}
-int main()
-{
-    Role A(10, 600, -43, 38, 900, 600, -43, 38);
-    A.Initial();
-    initgraph(1280, 720);
-    while (1)
-    {
-        A.PrintMove();
-    }
-    system("pause");
-    return 0;
-}
+	USHORT message;					// The message identifier
+	union
+	{
+		// Data of the mouse message
+		struct
+		{
+			bool ctrl : 1;		// Indicates whether the CTRL key is pressed
+			bool shift : 1;		// Indicates whether the SHIFT key is pressed
+			bool lbutton : 1;		// Indicates whether the left mouse button is pressed
+			bool mbutton : 1;		// Indicates whether the middle mouse button is pressed
+			bool rbutton : 1;		// Indicates whether the right mouse button is pressed
+			short x;				// The x-coordinate of the cursor
+			short y;				// The y-coordinate of the cursor
+			short wheel;			// The distance the wheel is rotated, expressed in multiples or divisions of 120
+		};
+
+		// Data of the key message
+		struct
+		{
+			BYTE vkcode;			// The virtual-key code of the key
+			BYTE scancode;			// The scan code of the key. The value depends on the OEM
+			bool extended : 1;		// Indicates whether the key is an extended key, such as a function key or a key on the numeric keypad. The value is true if the key is an extended key; otherwise, it is false.
+			bool prevdown : 1;		// Indicates whether the key is previously up or down
+		};
+
+		// Data of the char message
+		TCHAR ch;
+
+		// Data of the window message
+		struct
+		{
+			WPARAM wParam;
+			LPARAM lParam;
+		};
+	};
+};
+
+// Message Function
+ExMessage getmessage(BYTE filter = -1);										// Get a message until a message is available for retrieval
+void getmessage(ExMessage* msg, BYTE filter = -1);							// Get a message until a message is available for retrieval
+bool peekmessage(ExMessage* msg, BYTE filter = -1, bool removemsg = true);	// Get a message if any exist, otherwise return false
+void flushmessage(BYTE filter = -1);										// Flush the message buffer
