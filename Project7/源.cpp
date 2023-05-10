@@ -59,9 +59,10 @@ public:
     int IsFarAttack();
 };
 IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa[4], jumpb[4], attacka[3][7], attackb[3][7], strucka[3], struckb[3], blood[3], farattack[5], farattackmovea[6], farattackmoveb[6], farattackfire[5], downa[6], downb[6];
-IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7], Lstrucka[3], Lstruckb[3];
+IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7], Lstrucka[3], Lstruckb[3],ending;
 void Role::Initial()
 {
+    loadimage(&ending, _T("2.png"));
     //background.
     loadimage(&background, _T("pictures\\background\\0.png"));
     //Blood
@@ -284,7 +285,6 @@ void Role::PrintBackground()
     putimage(268, 135, player1.blood, 19, &blood[2], 0, 0);
     putimage(1004 - player2.blood, 135, player2.blood, 19, &blood[2], 0, 0);
 }
-
 void Role::PrintStill(role& A, role& B, IMAGE* imb, IMAGE* ima, IMAGE* Limb, IMAGE* Lima)
 {
     for (int i = 0; i < 4; i++)
@@ -782,9 +782,14 @@ int main()
         A.PrintMove();
         if (A.player2.blood <= 0)
         {
+            putimage(0, 0, &ending);
+            mciSendString(L"stop bgm", NULL, 0, NULL);
+            mciSendString(L"open 2.mp3 alias bgm2", 0, 0, 0);//´ò¿ªÒôÀÖ
+            mciSendString(L"play bgm2", 0, 0, 0);//²¥·ÅÒôÀÖ
+            _getch();
             break;
         }
     }
-
+    
     return 0;
 }
