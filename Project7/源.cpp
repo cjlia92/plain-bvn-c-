@@ -59,7 +59,7 @@ public:
     int IsFarAttack();
 };
 IMAGE background, stillb[4], stilla[4], runb[8], runa[8], jumpa[4], jumpb[4], attacka[3][7], attackb[3][7], strucka[3], struckb[3], blood[3], farattack[5], farattackmovea[6], farattackmoveb[6], farattackfire[5], downa[6], downb[6];
-IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7], Lstrucka[3], Lstruckb[3],ending;
+IMAGE Lstillb[4], Lstilla[4], Lrunb[8], Lruna[8], Ljumpa[4], Ljumpb[4], Lattacka[3][7], Lattackb[3][7], Lstrucka[3], Lstruckb[3], ending;
 void Role::Initial()
 {
     loadimage(&ending, _T("2.png"));
@@ -776,7 +776,6 @@ int main()
     initgraph(1280, 720);
     mciSendString(L"open naruto.mp3 alias bgm", 0, 0, 0);//¥Úø™“Ù¿÷
     mciSendString(L"play bgm repeat", 0, 0, 0);//≤•∑≈“Ù¿÷
-
     while (1)
     {
         A.PrintMove();
@@ -790,6 +789,5 @@ int main()
             break;
         }
     }
-    
     return 0;
 }
